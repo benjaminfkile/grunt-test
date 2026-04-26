@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Text, makeStyles, tokens } from '@fluentui/react-components';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 500;
@@ -12,6 +13,8 @@ const AI_DEAD_ZONE = 8;
 const PADDLE_DEFLECTION = 4;
 const BALL_SPEEDUP = 1.05;
 const MAX_BALL_SPEED = 14;
+const BALL_SERVE_VX = 4;
+const BALL_SERVE_VY = 2;
 
 export type GameState = {
   playerY: number;
@@ -20,8 +23,6 @@ export type GameState = {
   ballY: number;
   ballVx: number;
   ballVy: number;
-  playerScore: number;
-  aiScore: number;
 };
 
 const initialGameState: GameState = {
@@ -29,11 +30,28 @@ const initialGameState: GameState = {
   aiY: (CANVAS_HEIGHT - PADDLE_HEIGHT) / 2,
   ballX: CANVAS_WIDTH / 2 - BALL_SIZE / 2,
   ballY: CANVAS_HEIGHT / 2 - BALL_SIZE / 2,
-  ballVx: 4,
-  ballVy: 2,
-  playerScore: 0,
-  aiScore: 0,
+  ballVx: BALL_SERVE_VX,
+  ballVy: BALL_SERVE_VY,
 };
+
+function resetBall(state: GameState) {
+  state.ballX = CANVAS_WIDTH / 2 - BALL_SIZE / 2;
+  state.ballY = CANVAS_HEIGHT / 2 - BALL_SIZE / 2;
+  state.ballVx = Math.random() < 0.5 ? -BALL_SERVE_VX : BALL_SERVE_VX;
+  state.ballVy = Math.random() < 0.5 ? -BALL_SERVE_VY : BALL_SERVE_VY;
+}
+
+const useStyles = makeStyles({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: tokens.spacingVerticalM,
+  },
+  score: {
+    fontVariantNumeric: 'tabular-nums',
+  },
+});
 
 function drawScene(ctx: CanvasRenderingContext2D, state: GameState) {
   ctx.fillStyle = '#111';
@@ -61,9 +79,12 @@ function drawScene(ctx: CanvasRenderingContext2D, state: GameState) {
 }
 
 function PongGame() {
+  const styles = useStyles();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameStateRef = useRef<GameState>({ ...initialGameState });
   const heldKeysRef = useRef<Set<string>>(new Set());
+  const [playerScore, setPlayerScore] = useState(0);
+  const [aiScore, setAiScore] = useState(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -165,6 +186,14 @@ function PongGame() {
         state.ballVy += normalized * PADDLE_DEFLECTION;
       }
 
+      if (state.ballX + BALL_SIZE < 0) {
+        setAiScore((prev) => prev + 1);
+        resetBall(state);
+      } else if (state.ballX > CANVAS_WIDTH) {
+        setPlayerScore((prev) => prev + 1);
+        resetBall(state);
+      }
+
       drawScene(ctx, state);
       frameId = requestAnimationFrame(tick);
     };
@@ -180,12 +209,17 @@ function PongGame() {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={CANVAS_WIDTH}
-      height={CANVAS_HEIGHT}
-      style={{ display: 'block' }}
-    />
+    <div className={styles.root}>
+      <Text size={800} weight="semibold" className={styles.score}>
+        {playerScore} | {aiScore}
+      </Text>
+      <canvas
+        ref={canvasRef}
+        width={CANVAS_WIDTH}
+        height={CANVAS_HEIGHT}
+        style={{ display: 'block' }}
+      />
+    </div>
   );
 }
 
