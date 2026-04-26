@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 500;
@@ -23,8 +23,8 @@ const initialGameState: GameState = {
   aiY: (CANVAS_HEIGHT - PADDLE_HEIGHT) / 2,
   ballX: CANVAS_WIDTH / 2 - BALL_SIZE / 2,
   ballY: CANVAS_HEIGHT / 2 - BALL_SIZE / 2,
-  ballVx: 0,
-  ballVy: 0,
+  ballVx: 4,
+  ballVy: 2,
   playerScore: 0,
   aiScore: 0,
 };
@@ -56,15 +56,30 @@ function drawScene(ctx: CanvasRenderingContext2D, state: GameState) {
 
 function PongGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [gameState] = useState<GameState>(initialGameState);
+  const gameStateRef = useRef<GameState>({ ...initialGameState });
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return undefined;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    drawScene(ctx, gameState);
-  }, [gameState]);
+    if (!ctx) return undefined;
+
+    let frameId = 0;
+
+    const tick = () => {
+      const state = gameStateRef.current;
+      state.ballX += state.ballVx;
+      state.ballY += state.ballVy;
+      drawScene(ctx, state);
+      frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, []);
 
   return (
     <canvas
