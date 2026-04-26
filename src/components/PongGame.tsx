@@ -6,6 +6,7 @@ const PADDLE_WIDTH = 10;
 const PADDLE_HEIGHT = 80;
 const PADDLE_MARGIN = 20;
 const BALL_SIZE = 10;
+const PLAYER_PADDLE_SPEED = 7;
 
 export type GameState = {
   playerY: number;
@@ -57,6 +58,7 @@ function drawScene(ctx: CanvasRenderingContext2D, state: GameState) {
 function PongGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameStateRef = useRef<GameState>({ ...initialGameState });
+  const heldKeysRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -66,8 +68,39 @@ function PongGame() {
 
     let frameId = 0;
 
+    const heldKeys = heldKeysRef.current;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        heldKeys.add(event.key);
+        event.preventDefault();
+      }
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        heldKeys.delete(event.key);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
     const tick = () => {
       const state = gameStateRef.current;
+
+      if (heldKeys.has('ArrowUp')) {
+        state.playerY -= PLAYER_PADDLE_SPEED;
+      }
+      if (heldKeys.has('ArrowDown')) {
+        state.playerY += PLAYER_PADDLE_SPEED;
+      }
+      if (state.playerY < 0) {
+        state.playerY = 0;
+      } else if (state.playerY > CANVAS_HEIGHT - PADDLE_HEIGHT) {
+        state.playerY = CANVAS_HEIGHT - PADDLE_HEIGHT;
+      }
+
       state.ballX += state.ballVx;
       state.ballY += state.ballVy;
       drawScene(ctx, state);
@@ -78,6 +111,9 @@ function PongGame() {
 
     return () => {
       cancelAnimationFrame(frameId);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      heldKeys.clear();
     };
   }, []);
 
