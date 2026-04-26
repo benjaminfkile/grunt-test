@@ -1,41 +1,52 @@
-import React, { useState } from 'react';
-import { TabList, Tab, SelectTabEvent, SelectTabData, Button } from '@fluentui/react-components';
+import React from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
+import { makeStyles, tokens } from '@fluentui/react-components';
 import './App.css';
-import TodoInput from './components/TodoInput';
-import TodoList from './components/TodoList';
-import useTodos from './hooks/useTodos';
 
-type Filter = 'all' | 'active' | 'completed';
+const useStyles = makeStyles({
+  nav: {
+    display: 'flex',
+    gap: tokens.spacingHorizontalM,
+    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalL}`,
+    borderBottomWidth: tokens.strokeWidthThin,
+    borderBottomStyle: 'solid',
+    borderBottomColor: tokens.colorNeutralStroke2,
+    backgroundColor: tokens.colorNeutralBackground1,
+  },
+  link: {
+    color: tokens.colorNeutralForeground1,
+    textDecorationLine: 'none',
+    padding: `${tokens.spacingVerticalSNudge} ${tokens.spacingHorizontalM}`,
+    borderRadius: tokens.borderRadiusMedium,
+    fontFamily: tokens.fontFamilyBase,
+    fontSize: tokens.fontSizeBase300,
+    '&:hover': {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+    },
+    '&.active': {
+      backgroundColor: tokens.colorNeutralBackground1Selected,
+      fontWeight: tokens.fontWeightSemibold,
+    },
+  },
+});
 
 function App() {
-  const { todos, addTodo, toggleTodo, deleteTodo, clearCompleted } = useTodos();
-  const [filter, setFilter] = useState<Filter>('all');
-
-  const visibleTodos = todos.filter((todo: { completed: boolean }) => {
-    if (filter === 'active') return !todo.completed;
-    if (filter === 'completed') return todo.completed;
-    return true;
-  });
-
-  const hasCompleted = todos.some((todo: { completed: boolean }) => todo.completed);
-
-  const handleTabSelect = (_event: SelectTabEvent, data: SelectTabData) => {
-    setFilter(data.value as Filter);
-  };
+  const styles = useStyles();
 
   return (
     <div className="App">
-      <h1>Todo List</h1>
-      <TodoInput onAdd={addTodo} />
-      <TabList selectedValue={filter} onTabSelect={handleTabSelect}>
-        <Tab value="all">All</Tab>
-        <Tab value="active">Active</Tab>
-        <Tab value="completed">Completed</Tab>
-      </TabList>
-      <TodoList todos={visibleTodos} onToggle={toggleTodo} onDelete={deleteTodo} />
-      <Button onClick={clearCompleted} disabled={!hasCompleted}>
-        Clear completed
-      </Button>
+      <nav className={styles.nav}>
+        <NavLink to="/" end className={styles.link}>
+          Home
+        </NavLink>
+        <NavLink to="/todos" className={styles.link}>
+          Todos
+        </NavLink>
+        <NavLink to="/pong" className={styles.link}>
+          Pong
+        </NavLink>
+      </nav>
+      <Outlet />
     </div>
   );
 }
