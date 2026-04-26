@@ -1,7 +1,10 @@
 import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Route, Routes } from 'react-router-dom';
 import { makeStyles, tokens } from '@fluentui/react-components';
 import './App.css';
+import Home from './pages/Home';
+import Todos from './pages/Todos';
+import Pong from './pages/Pong';
 
 const useStyles = makeStyles({
   nav: {
@@ -46,7 +49,11 @@ function App() {
           Pong
         </NavLink>
       </nav>
-      <Outlet />
+      <Routes>
+        <Route index element={<Home />} />
+        <Route path="/todos" element={<Todos />} />
+        <Route path="/pong" element={<Pong />} />
+      </Routes>
     </div>
   );
 }
