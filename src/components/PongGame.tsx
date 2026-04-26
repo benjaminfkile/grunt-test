@@ -1,5 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Text, makeStyles, tokens } from '@fluentui/react-components';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Button,
+  MessageBar,
+  MessageBarBody,
+  MessageBarTitle,
+  Text,
+  makeStyles,
+  tokens,
+} from '@fluentui/react-components';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 500;
@@ -15,6 +23,7 @@ const BALL_SPEEDUP = 1.05;
 const MAX_BALL_SPEED = 14;
 const BALL_SERVE_VX = 4;
 const BALL_SERVE_VY = 2;
+const WINNING_SCORE = 11;
 
 export type GameState = {
   playerY: number;
@@ -24,6 +33,8 @@ export type GameState = {
   ballVx: number;
   ballVy: number;
 };
+
+type Winner = 'player' | 'ai' | null;
 
 const initialGameState: GameState = {
   playerY: (CANVAS_HEIGHT - PADDLE_HEIGHT) / 2,
@@ -50,6 +61,16 @@ const useStyles = makeStyles({
   },
   score: {
     fontVariantNumeric: 'tabular-nums',
+  },
+  canvasWrapper: {
+    position: 'relative',
+  },
+  overlay: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    minWidth: '240px',
   },
 });
 
@@ -83,8 +104,22 @@ function PongGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameStateRef = useRef<GameState>({ ...initialGameState });
   const heldKeysRef = useRef<Set<string>>(new Set());
+  const playerScoreRef = useRef(0);
+  const aiScoreRef = useRef(0);
+  const gameOverRef = useRef(false);
   const [playerScore, setPlayerScore] = useState(0);
   const [aiScore, setAiScore] = useState(0);
+  const [winner, setWinner] = useState<Winner>(null);
+
+  const handleRestart = useCallback(() => {
+    gameStateRef.current = { ...initialGameState };
+    playerScoreRef.current = 0;
+    aiScoreRef.current = 0;
+    gameOverRef.current = false;
+    setPlayerScore(0);
+    setAiScore(0);
+    setWinner(null);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -114,6 +149,12 @@ function PongGame() {
 
     const tick = () => {
       const state = gameStateRef.current;
+
+      if (gameOverRef.current) {
+        drawScene(ctx, state);
+        frameId = requestAnimationFrame(tick);
+        return;
+      }
 
       if (heldKeys.has('ArrowUp')) {
         state.playerY -= PLAYER_PADDLE_SPEED;
@@ -187,10 +228,20 @@ function PongGame() {
       }
 
       if (state.ballX + BALL_SIZE < 0) {
-        setAiScore((prev) => prev + 1);
+        aiScoreRef.current += 1;
+        setAiScore(aiScoreRef.current);
+        if (aiScoreRef.current >= WINNING_SCORE) {
+          gameOverRef.current = true;
+          setWinner('ai');
+        }
         resetBall(state);
       } else if (state.ballX > CANVAS_WIDTH) {
-        setPlayerScore((prev) => prev + 1);
+        playerScoreRef.current += 1;
+        setPlayerScore(playerScoreRef.current);
+        if (playerScoreRef.current >= WINNING_SCORE) {
+          gameOverRef.current = true;
+          setWinner('player');
+        }
         resetBall(state);
       }
 
@@ -213,12 +264,30 @@ function PongGame() {
       <Text size={800} weight="semibold" className={styles.score}>
         {playerScore} | {aiScore}
       </Text>
-      <canvas
-        ref={canvasRef}
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
-        style={{ display: 'block' }}
-      />
+      <div className={styles.canvasWrapper}>
+        <canvas
+          ref={canvasRef}
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          style={{ display: 'block' }}
+        />
+        {winner && (
+          <div className={styles.overlay}>
+            <MessageBar intent={winner === 'player' ? 'success' : 'error'}>
+              <MessageBarBody>
+                <MessageBarTitle>
+                  {winner === 'player' ? 'You win!' : 'AI wins!'}
+                </MessageBarTitle>
+              </MessageBarBody>
+            </MessageBar>
+          </div>
+        )}
+      </div>
+      {winner && (
+        <Button appearance="primary" onClick={handleRestart}>
+          Restart
+        </Button>
+      )}
     </div>
   );
 }
