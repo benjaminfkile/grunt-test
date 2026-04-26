@@ -32,5 +32,9 @@ export default function useTodos() {
     [setTodos],
   );
 
-  return { todos, addTodo, toggleTodo, deleteTodo };
+  const clearCompleted = useCallback(() => {
+    setTodos((current) => current.filter((todo) => !todo.completed));
+  }, [setTodos]);
+
+  return { todos, addTodo, toggleTodo, deleteTodo, clearCompleted };
 }
