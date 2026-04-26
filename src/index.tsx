@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { FluentProvider, webLightTheme } from '@fluentui/react-components';
+import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
@@ -11,7 +12,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <FluentProvider theme={webLightTheme}>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </FluentProvider>
   </React.StrictMode>
 );
