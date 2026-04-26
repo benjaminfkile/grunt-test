@@ -1,17 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { TabList, Tab, SelectTabEvent, SelectTabData } from '@fluentui/react-components';
 import './App.css';
 import TodoInput from './components/TodoInput';
 import TodoList from './components/TodoList';
 import useTodos from './hooks/useTodos';
 
+type Filter = 'all' | 'active' | 'completed';
+
 function App() {
   const { todos, addTodo, toggleTodo, deleteTodo } = useTodos();
+  const [filter, setFilter] = useState<Filter>('all');
+
+  const visibleTodos = todos.filter((todo: { completed: boolean }) => {
+    if (filter === 'active') return !todo.completed;
+    if (filter === 'completed') return todo.completed;
+    return true;
+  });
+
+  const handleTabSelect = (_event: SelectTabEvent, data: SelectTabData) => {
+    setFilter(data.value as Filter);
+  };
 
   return (
     <div className="App">
       <h1>Todo List</h1>
       <TodoInput onAdd={addTodo} />
-      <TodoList todos={todos} onToggle={toggleTodo} onDelete={deleteTodo} />
+      <TabList selectedValue={filter} onTabSelect={handleTabSelect}>
+        <Tab value="all">All</Tab>
+        <Tab value="active">Active</Tab>
+        <Tab value="completed">Completed</Tab>
+      </TabList>
+      <TodoList todos={visibleTodos} onToggle={toggleTodo} onDelete={deleteTodo} />
     </div>
   );
 }
