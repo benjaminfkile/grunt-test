@@ -9,6 +9,9 @@ const BALL_SIZE = 10;
 const PLAYER_PADDLE_SPEED = 7;
 const AI_PADDLE_SPEED = 5;
 const AI_DEAD_ZONE = 8;
+const PADDLE_DEFLECTION = 4;
+const BALL_SPEEDUP = 1.05;
+const MAX_BALL_SPEED = 14;
 
 export type GameState = {
   playerY: number;
@@ -119,6 +122,49 @@ function PongGame() {
 
       state.ballX += state.ballVx;
       state.ballY += state.ballVy;
+
+      if (state.ballY < 0) {
+        state.ballY = 0;
+        state.ballVy = -state.ballVy;
+      } else if (state.ballY > CANVAS_HEIGHT - BALL_SIZE) {
+        state.ballY = CANVAS_HEIGHT - BALL_SIZE;
+        state.ballVy = -state.ballVy;
+      }
+
+      const playerPaddleRight = PADDLE_MARGIN + PADDLE_WIDTH;
+      if (
+        state.ballVx < 0 &&
+        state.ballX < playerPaddleRight &&
+        state.ballX + BALL_SIZE > PADDLE_MARGIN &&
+        state.ballY + BALL_SIZE > state.playerY &&
+        state.ballY < state.playerY + PADDLE_HEIGHT
+      ) {
+        state.ballX = playerPaddleRight;
+        const nextVx = Math.min(-state.ballVx * BALL_SPEEDUP, MAX_BALL_SPEED);
+        state.ballVx = nextVx;
+        const offset =
+          (state.ballY + BALL_SIZE / 2) - (state.playerY + PADDLE_HEIGHT / 2);
+        const normalized = offset / (PADDLE_HEIGHT / 2);
+        state.ballVy += normalized * PADDLE_DEFLECTION;
+      }
+
+      const aiPaddleLeft = CANVAS_WIDTH - PADDLE_MARGIN - PADDLE_WIDTH;
+      if (
+        state.ballVx > 0 &&
+        state.ballX + BALL_SIZE > aiPaddleLeft &&
+        state.ballX < aiPaddleLeft + PADDLE_WIDTH &&
+        state.ballY + BALL_SIZE > state.aiY &&
+        state.ballY < state.aiY + PADDLE_HEIGHT
+      ) {
+        state.ballX = aiPaddleLeft - BALL_SIZE;
+        const nextVx = Math.max(-state.ballVx * BALL_SPEEDUP, -MAX_BALL_SPEED);
+        state.ballVx = nextVx;
+        const offset =
+          (state.ballY + BALL_SIZE / 2) - (state.aiY + PADDLE_HEIGHT / 2);
+        const normalized = offset / (PADDLE_HEIGHT / 2);
+        state.ballVy += normalized * PADDLE_DEFLECTION;
+      }
+
       drawScene(ctx, state);
       frameId = requestAnimationFrame(tick);
     };
