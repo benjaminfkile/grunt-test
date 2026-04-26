@@ -7,6 +7,8 @@ const PADDLE_HEIGHT = 80;
 const PADDLE_MARGIN = 20;
 const BALL_SIZE = 10;
 const PLAYER_PADDLE_SPEED = 7;
+const AI_PADDLE_SPEED = 5;
+const AI_DEAD_ZONE = 8;
 
 export type GameState = {
   playerY: number;
@@ -99,6 +101,20 @@ function PongGame() {
         state.playerY = 0;
       } else if (state.playerY > CANVAS_HEIGHT - PADDLE_HEIGHT) {
         state.playerY = CANVAS_HEIGHT - PADDLE_HEIGHT;
+      }
+
+      const aiCenter = state.aiY + PADDLE_HEIGHT / 2;
+      const ballCenter = state.ballY + BALL_SIZE / 2;
+      const delta = ballCenter - aiCenter;
+      if (delta < -AI_DEAD_ZONE) {
+        state.aiY -= Math.min(AI_PADDLE_SPEED, -delta);
+      } else if (delta > AI_DEAD_ZONE) {
+        state.aiY += Math.min(AI_PADDLE_SPEED, delta);
+      }
+      if (state.aiY < 0) {
+        state.aiY = 0;
+      } else if (state.aiY > CANVAS_HEIGHT - PADDLE_HEIGHT) {
+        state.aiY = CANVAS_HEIGHT - PADDLE_HEIGHT;
       }
 
       state.ballX += state.ballVx;
