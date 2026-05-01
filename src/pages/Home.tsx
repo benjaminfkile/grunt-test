@@ -67,6 +67,14 @@ function Home() {
             />
           </Card>
         </Link>
+        <Link to="/counter" className={styles.cardLink}>
+          <Card className={styles.card}>
+            <CardHeader
+              header={<Text weight="semibold">Counter</Text>}
+              description={<Text>A simple counter with increment, decrement, and reset.</Text>}
+            />
+          </Card>
+        </Link>
       </div>
     </div>
   );

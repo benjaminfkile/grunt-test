@@ -5,6 +5,7 @@ import './App.css';
 import Home from './pages/Home';
 import Todos from './pages/Todos';
 import Pong from './pages/Pong';
+import Counter from './pages/Counter';
 
 const useStyles = makeStyles({
   nav: {
@@ -48,11 +49,15 @@ function App() {
         <NavLink to="/pong" className={styles.link}>
           Pong
         </NavLink>
+        <NavLink to="/counter" className={styles.link}>
+          Counter
+        </NavLink>
       </nav>
       <Routes>
         <Route index element={<Home />} />
         <Route path="/todos" element={<Todos />} />
         <Route path="/pong" element={<Pong />} />
+        <Route path="/counter" element={<Counter />} />
       </Routes>
     </div>
   );
